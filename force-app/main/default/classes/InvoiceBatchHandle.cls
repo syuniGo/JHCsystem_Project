@@ -20,7 +20,7 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
                     'CompanyId: ' + WorkTime__r.PersonalID__r.Account__c
                 );
             }
-            //创建一个map key 为受注会社accountid value为每个公司的主请求
+            //aa创建一个map key 为受注会社accountid value为每个公司的主请求
             Map<Id, Invoice__c> companyIdToInvoice__c = new Map<Id, Invoice__c>();
             List<Invoice__c> lastMonthInvoices = new List<Invoice__c>();
 
