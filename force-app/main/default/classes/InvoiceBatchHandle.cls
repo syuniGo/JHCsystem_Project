@@ -10,7 +10,7 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
     }
 
     public void execute(Database.BatchableContext bc, List<sObject> workTimes) {
-        //如果找到的作业实绩不为空
+        //如果找到的作业实绩不为空t
         if (!workTimes.isEmpty()) {
             //创建一个set 来存放 作业员所属公司的id
             Set<Id> companyIds = new Set<Id>();
