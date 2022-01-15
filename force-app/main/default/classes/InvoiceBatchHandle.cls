@@ -5,7 +5,7 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
     public Database.QueryLocator start(Database.BatchableContext bc) {
         //找到所有上个月登陆的作业实绩
         return Database.getQueryLocator(
-            'select id,PersonalID__r.Account__c,PersonalID__r.id,PersonalID__r.name,PurchaseOrderDetail__c,PurchaseOrderDetail__r.StandardPrice__c,PurchaseOrderDetail__r.OverTimePrice__c,PurchaseOrderDetail__r.DeductionPrice__c,StandardTime__c,MinustimeHour__c,OvertimeHour__c from WorkTime__c,OvertimeHour__cwhere CreatedDate = LAST_MONTH'
+            'select id,PersonalID__r.Account__c,PersonalID__r.id,PersonalID__r.name,PurchaseOrderDetail__c,PurchaseOrderDetail__r.StandardPrice__c,PurchaseOrderDetail__r.OverTimePrice__c,PurchaseOrderDetail__r.DeductionPrice__c,StandardTime__c,MinustimeHour__c,OvertimeHour__c from WorkTime__c where CreatedDate = LAST_MONTH'
         );
     }
 
