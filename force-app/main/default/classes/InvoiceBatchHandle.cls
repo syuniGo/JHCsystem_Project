@@ -62,8 +62,9 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
                 InvoiceDetail__c newInvoiceDetail = new InvoiceDetail__c(
                     //請求id
                     InvoiceId__c = companyIdToInvoice__c.get(
-                        workTime.PersonalID__r.Account__c
-                    ),
+                            workTime.PersonalID__r.Account__c
+                        )
+                        .id,
                     //作業員工数実績id
                     PartnerStaffWorkTime__c = workTime.id,
                     //作業員ID
