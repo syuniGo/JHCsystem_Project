@@ -30,9 +30,11 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
                 Invoice__c lastMonthInvoice = new Invoice__c(
                     //計上年月  获取上个月的年月string
                     InvoiceYM__c = String.valueOf(
-                            System.today().toStartOfMonth().year()
+                            System.today().toStartOfMonth().addDays(-1).year()
                         ) +
-                        String.valueOf(System.today().toStartOfMonth().month()),
+                        String.valueOf(
+                            System.today().toStartOfMonth().addDays(-1).month()
+                        ),
                     //請求ステータス
                     InvoiceStatus__c = '作成済',
                     //振込期限日  具体哪一天 暂定本月最后最后1天
