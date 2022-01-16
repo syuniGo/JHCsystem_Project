@@ -24,18 +24,11 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
             Map<Id, Invoice__c> companyIdToInvoice__c = new Map<Id, Invoice__c>();
             List<Invoice__c> lastMonthInvoices = new List<Invoice__c>();
 
-            //获取这个月最后一天的日期
-            Date lastDay = System.today()
-                .addMonths(1)
-                .toStartofMonth()
-                .addDays(-1);
-            String year = String.valueOf(lastDay.year());
-            String month = String.valueOf(lastDay.month());
 
             for (Id companyId : companyIds) {
                 Invoice__c lastMonthInvoice = new Invoice__c(
                     //計上年月
-                    InvoiceYM__c = month + year,
+                    InvoiceYM__c = String.valueOf(System.today().year()) + String.valueOf(System.today().month()),
                     //請求ステータス
                     InvoiceStatus__c = '作成済',
                     //振込期限日  具体哪一天 暂定本月最后最后1天
