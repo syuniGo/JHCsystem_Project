@@ -28,7 +28,7 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
 
             for (Id companyId : companyIds) {
                 Invoice__c lastMonthInvoice = new Invoice__c(
-                    //計上年月  获取上个月的年月string
+                    //計上年月  获取上个月的年月string.
                     InvoiceYM__c = String.valueOf(
                             System.today().toStartOfMonth().addDays(-1).year()
                         ) +
