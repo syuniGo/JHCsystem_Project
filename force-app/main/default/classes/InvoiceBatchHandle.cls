@@ -1,6 +1,8 @@
 public with sharing class InvoiceBatchHandle implements Database.Batchable<sObject>, Database.Stateful {
+    //设置一个计数最后生成多少个请求
+    public Integer recordsProcessed1 = 0;
     //设置一个计数最后生成多少个请求明细
-    public Integer recordsProcessed = 0;
+    public Integer recordsProcessed2 = 0;
 
     public Database.QueryLocator start(Database.BatchableContext bc) {
         //找到所有上个月登陆的作业实绩
@@ -10,7 +12,7 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
     }
 
     public void execute(Database.BatchableContext bc, List<sObject> workTimes) {
-        //如果找到的作业实绩不为空t
+        //如果找到的作业实绩不为空
         if (!workTimes.isEmpty()) {
             //创建一个set 来存放 作业员所属公司的id
             Set<Id> companyIds = new Set<Id>();
@@ -24,11 +26,13 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
             Map<Id, Invoice__c> companyIdToInvoice__c = new Map<Id, Invoice__c>();
             List<Invoice__c> lastMonthInvoices = new List<Invoice__c>();
 
-
             for (Id companyId : companyIds) {
                 Invoice__c lastMonthInvoice = new Invoice__c(
-                    //計上年月
-                    InvoiceYM__c = String.valueOf(System.today().year()) + String.valueOf(System.today().month()),
+                    //計上年月  获取上个月的年月string
+                    InvoiceYM__c = String.valueOf(
+                            System.today().toStartOfMonth().year()
+                        ) +
+                        String.valueOf(System.today().toStartOfMonth().month()),
                     //請求ステータス
                     InvoiceStatus__c = '作成済',
                     //振込期限日  具体哪一天 暂定本月最后最后1天
@@ -47,8 +51,11 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
                 companyIdToInvoice__c.put(companyId, lastMonthInvoice);
                 lastMonthInvoices.add(lastMonthInvoice);
             }
-            insert lastMonthInvoices;
 
+            List<Database.SaveResult> saveResult1 = Database.insert(
+                lastMonthInvoices
+            );
+            recordsProcessed1 = saveResult1.size();
             //循环所有的作业实绩 每一个新建一个请求明细 根据作业员的公司绑定到对应公司的主请求上
             List<InvoiceDetail__c> newInvoiceDetailList = new List<InvoiceDetail__c>();
             for (WorkTime__c workTime : workTimes) {
@@ -85,12 +92,12 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
             }
             //databese insert请求明细list 并接受结果
 
-            List<Database.SaveResult> saveResult = Database.insert(
+            List<Database.SaveResult> saveResult2 = Database.insert(
                 newInvoiceDetailList
             );
-            recordsProcessed = saveResult.size();
+            recordsProcessed2 = saveResult2.size();
             //如果insert不成功把错误信息加入字符串并输出到log
-            for (Database.SaveResult sr : saveResult) {
+            for (Database.SaveResult sr : saveResult2) {
                 if (!sr.isSuccess()) {
                     List<Database.Error> errors = sr.getErrors();
                     String errorInString = String.join(errors, ',');
@@ -101,13 +108,19 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
     }
 
     public void finish(Database.BatchableContext bc) {
-        System.debug(recordsProcessed + '请求明细作成');
+        System.debug(recordsProcessed1 + '请求作成');
+        System.debug(recordsProcessed2 + '请求明细作成');
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
         String[] toAddresses = new List<String>{ 'useizen01@gmail.com' };
         mail.setToAddresses(toAddresses);
         mail.setSenderDisplayName('本月バーチ請求作成');
         mail.setSubject('本月バーチ請求作成');
-        mail.setHtmlBody(recordsProcessed + '请求明细作成');
+        mail.setHtmlBody(
+            recordsProcessed1 +
+            '请求作成' +
+            recordsProcessed2 +
+            '请求明细作成'
+        );
         Messaging.sendEmail(new List<Messaging.Email>{ mail });
     }
 }
