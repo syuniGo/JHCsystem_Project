@@ -37,3 +37,37 @@ exMonth = String.valueOf(firstWorkDateInThisMonth.month()) + ' ? ';
 exYear = String.valueOf(firstWorkDateInThisMonth.year());
 executeTime = executeTime + exDay + exMonth + exYear;
 System.debug(executeTime);
+list<account> a = [
+    SELECT
+        id,
+        name,
+        (
+            SELECT
+                id,
+                Account__c,
+                PersonalID__r.Account__c,
+                PersonalID__r.id,
+                PersonalID__r.name,
+                PurchaseOrderDetail__c,
+                PurchaseOrderDetail__r.StandardPrice__c,
+                PurchaseOrderDetail__r.OverTimePrice__c,
+                PurchaseOrderDetail__r.DeductionPrice__c,
+                StandardTime__c,
+                MinustimeHour__c,
+                OvertimeHour__c
+            FROM WorkTime__r
+            WHERE CreatedDate = THIS_MONTH
+        )
+    FROM Account
+    WHERE
+        Id IN (
+            SELECT Account__c
+            FROM WorkTime__c
+            WHERE CreatedDate = THIS_MONTH
+        )
+];
+System.debug(a);
+for (account aa : a) {
+    List<WorkTime__c> wts = aa.WorkTime__r;
+    System.debug(wts);
+}

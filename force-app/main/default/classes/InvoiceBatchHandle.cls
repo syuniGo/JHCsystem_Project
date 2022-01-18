@@ -4,14 +4,21 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
     //设置一个计数最后生成多少个请求明细
     public Integer recordsProcessed2 = 0;
 
+
     public Database.QueryLocator start(Database.BatchableContext bc) {
         //找到所有上个月登陆的作业实绩
         return Database.getQueryLocator(
             'select id,PersonalID__r.Account__c,PersonalID__r.id,PersonalID__r.name,PurchaseOrderDetail__c,PurchaseOrderDetail__r.StandardPrice__c,PurchaseOrderDetail__r.OverTimePrice__c,PurchaseOrderDetail__r.DeductionPrice__c,StandardTime__c,MinustimeHour__c,OvertimeHour__c from WorkTime__c where CreatedDate = LAST_MONTH'
         );
+
+        List<Account> acclist 
+        for（）PersonalID__r.Account__c
+        new acc    .worktime__r = 
+        acclist.add(acc) 200 10000
+        return acclist  2000000
     }
 
-    public void execute(Database.BatchableContext bc, List<sObject> workTimes) {
+    public void execute(Database.BatchableContext bc, List<sObject> workTimes) {  300 huishe
         //如果找到的作业实绩不为空
         if (!workTimes.isEmpty()) {
             //创建一个set 来存放 作业员所属公司的id
