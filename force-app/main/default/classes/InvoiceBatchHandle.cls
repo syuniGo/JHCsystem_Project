@@ -7,18 +7,54 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
 
     public Database.QueryLocator start(Database.BatchableContext bc) {
         //找到所有上个月登陆的作业实绩
-        return Database.getQueryLocator(
-            'select id,PersonalID__r.Account__c,PersonalID__r.id,PersonalID__r.name,PurchaseOrderDetail__c,PurchaseOrderDetail__r.StandardPrice__c,PurchaseOrderDetail__r.OverTimePrice__c,PurchaseOrderDetail__r.DeductionPrice__c,StandardTime__c,MinustimeHour__c,OvertimeHour__c from WorkTime__c where CreatedDate = LAST_MONTH'
-        );
+   /*      return Database.getQueryLocator(
+            'select id,name,(id,Account__c,PersonalID__r.Account__c,PersonalID__r.id,PersonalID__r.name,PurchaseOrderDetail__c,PurchaseOrderDetail__r.StandardPrice__c,PurchaseOrderDetail__r.OverTimePrice__c,PurchaseOrderDetail__r.DeductionPrice__c,StandardTime__c,MinustimeHour__c,OvertimeHour__c from WorkTime__c where CreatedDate = LAST_MONTH'
+        ); */
 
-        List<Account> acclist 
-        for（）PersonalID__r.Account__c
-        new acc    .worktime__r = 
-        acclist.add(acc) 200 10000
-        return acclist  2000000
+        //先月作成した作業実績をsoqlする　作業員情報を通じる取引先情報をゲットする　
+        List<WorkTime__c> wtList =  Database.getQueryLocator(
+            'select id,Account__c,PersonalID__r.Account__c,PersonalID__r.Account__r.name,PersonalID__r.id,PersonalID__r.name,PurchaseOrderDetail__c,PurchaseOrderDetail__r.StandardPrice__c,PurchaseOrderDetail__r.OverTimePrice__c,PurchaseOrderDetail__r.DeductionPrice__c,StandardTime__c,MinustimeHour__c,OvertimeHour__c from WorkTime__c where CreatedDate = LAST_MONTH'
+        );
+        
+        List<Account> accList = new List<Account>();
+        Set<Id> accidList = new Set<id>();
+      for (WorkTime__c wt : wtList) {
+          accidList.add(wt.PersonalID__r.Account__c);
+      }
+       
+        //作業実績をループする　new Account作成
+        
+        for (id accid : accidList) {
+            Account acc = new Account (
+                id = wt.PersonalID__r.Account__c,
+                name = wt.PersonalID__r.Account__r.Name
+            );
+            accList.add(acc);
+        }
+
+        //作業実績をループする　Account関連作業員追加
+        for (WorkTime__c wt : wtList) {
+            for (Account acc : accList) {
+                if (wt.PersonalID__r.Account__c=acc.id) {
+                    acc.OperatorInformation__r.add(wt);
+                }
+            }
+        }
+        //取引先listをループする
+        for (Account acc : accList) {
+            for (OperatorInformation__c op : acc.OperatorInformation__r) {
+            //作業実績listをループする
+                for (WorkTime__c wt : wtList) {
+                //作業実績参照作業員情報id==作業員情報idの場合 
+                    if (op.id= wt.PersonalID__r.id) {
+                    //作業員情報関連作業実績追加
+                        op.NameId__r.add(wt);  
+            }
+        }
+        return accList;
     }
 
-    public void execute(Database.BatchableContext bc, List<sObject> workTimes) {  300 huishe
+    public void execute(Database.BatchableContext bc, List<sObject> workTimes) {  
         //如果找到的作业实绩不为空
         if (!workTimes.isEmpty()) {
             //创建一个set 来存放 作业员所属公司的id
