@@ -1,11 +1,11 @@
 public with sharing class InvoiceBatchHandle2 implements Database.Batchable<sObject>, Database.Stateful {
-    //請求の作成数を記録する
+    //請求の登録数を記録する
     public Integer recordsProcessed1 = 0;
-    //請求明細の作成数を記録する
+    //請求明細の登録数を記録する
     public Integer recordsProcessed2 = 0;
-    //請求の作成失敗したら、エラーを記録する
+    //請求の登録失敗したら、エラーを記録する
     public String recordsProcessederr1 = '';
-    //請求明細の作成失敗したら、エラーを記録する
+    //請求明細の登録失敗したら、エラーを記録する
     public String recordsProcessederr2 = '';
 
     public Database.QueryLocator start(Database.BatchableContext bc) {
@@ -18,17 +18,20 @@ public with sharing class InvoiceBatchHandle2 implements Database.Batchable<sObj
     public void execute(Database.BatchableContext bc, List<Account> accounts) {
         //取引先Idとその取引先関連の先月作業実績のＭap
         Map<Id, List<WorkTime__c>> accIdToWorkTimes = new Map<Id, List<WorkTime__c>>();
-        for (Account acc : accounts) {
-            List<WorkTime__c> wts = acc.WorkTime__r;
-            accIdToWorkTimes.put(acc.id, wts);
-        }
-        System.debug(accounts.size());
+
+        //請求insert用
+        List<Invoice__c> lastMonthInvoices = new List<Invoice__c>();
+        //請求明細insert用
+        List<InvoiceDetail__c> newInvoiceDetailList = new List<InvoiceDetail__c>();
+
         //前ＳOQLで出した取引先Id数!=0の場合
-        if (!accIdToWorkTimes.keySet().isEmpty()) {
-            //請求insert用
-            List<Invoice__c> lastMonthInvoices = new List<Invoice__c>();
+        if (!accounts.isEmpty()) {
             //取引先をループする
             for (Account acc : accounts) {
+                //取引先idとその関連作業実績をMAPに入れる
+                List<WorkTime__c> wts = acc.WorkTime__r;
+                accIdToWorkTimes.put(acc.id, wts);
+
                 //請求を作成する
                 Invoice__c lastMonthInvoice = new Invoice__c(
                     //計上年月　先月の年ナンバーと月ナンバー
@@ -57,7 +60,8 @@ public with sharing class InvoiceBatchHandle2 implements Database.Batchable<sObj
             }
             //請求を登録する　 戻り値を保存する
             List<Database.SaveResult> saveResult1 = Database.insert(
-                lastMonthInvoices
+                lastMonthInvoices,
+                false
             );
             //請求登録の戻り値をループする
             for (Database.SaveResult sr : saveResult1) {
@@ -65,14 +69,12 @@ public with sharing class InvoiceBatchHandle2 implements Database.Batchable<sObj
                     //登録失敗した場合はエラーを記録して、logに出力する
                     List<Database.Error> errors = sr.getErrors();
                     recordsProcessederr1 = String.join(errors, ',');
-                    System.debug(recordsProcessederr1);
+                } else {
+                    //請求登録成功の数を記録する
+                    recordsProcessed1++;
                 }
             }
-            //請求登録成功の数を記録する
-            recordsProcessed1 = saveResult1.size();
 
-            ////請求明細insert用
-            List<InvoiceDetail__c> newInvoiceDetailList = new List<InvoiceDetail__c>();
             //登録した請求をループする　
             for (Invoice__c lastMonthInvoice : lastMonthInvoices) {
                 //請求の受注会社をKEYにして、Mapからこの受注会社の関連作業実績をゲットして、lastMonthWtsに与える
@@ -111,7 +113,8 @@ public with sharing class InvoiceBatchHandle2 implements Database.Batchable<sObj
             }
             //請求明細を登録する　 戻り値を保存する
             List<Database.SaveResult> saveResult2 = Database.insert(
-                newInvoiceDetailList
+                newInvoiceDetailList,
+                false
             );
 
             recordsProcessed2 = saveResult2.size();
@@ -121,15 +124,16 @@ public with sharing class InvoiceBatchHandle2 implements Database.Batchable<sObj
                 if (!sr.isSuccess()) {
                     List<Database.Error> errors = sr.getErrors();
                     recordsProcessederr2 = String.join(errors, ',');
-                    System.debug(recordsProcessederr2);
                 }
             }
         }
     }
 
     public void finish(Database.BatchableContext bc) {
-        System.debug(recordsProcessed1 + '请求作成');
-        System.debug(recordsProcessed2 + '请求明细作成');
+        System.debug(recordsProcessed1 + '請求作成');
+        System.debug(recordsProcessed2 + '請求明細作成');
+        System.debug('請求登録エラー:' + recordsProcessederr1);
+        System.debug('請求明細登録エラー:' + recordsProcessederr2);
         //発注会社管理員へ送信する
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
         String[] toAddresses = new List<String>{ 'diamondjsf@gmail.com' };
