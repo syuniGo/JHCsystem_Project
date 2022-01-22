@@ -11,7 +11,7 @@ public with sharing class InvoiceBatchHandle2 implements Database.Batchable<sObj
     public Database.QueryLocator start(Database.BatchableContext bc) {
         //先月作業実績を作成した取引先とその取引先関連の先月作業実績を出す
         return Database.getQueryLocator(
-            'select id,name,(select id,Account__c,PersonalID__r.Account__c,PersonalID__r.id,PersonalID__r.name,PurchaseOrderDetail__c,PurchaseOrderDetail__r.StandardPrice__c,PurchaseOrderDetail__r.OverTimePrice__c,PurchaseOrderDetail__r.DeductionPrice__c,StandardTime__c,MinustimeHour__c,OvertimeHour__c from WorkTime__r where CreatedDate = THIS_MONTH) from Account where id in (SELECT Account__c FROM WorkTime__c WHERE CreatedDate = THIS_MONTH)'
+            'select id,name,(select id,Account__c,PersonalID__r.Account__c,PersonalID__r.id,PersonalID__r.name,PurchaseOrderDetail__c,PurchaseOrderDetail__r.StandardPrice__c,PurchaseOrderDetail__r.OverTimePrice__c,PurchaseOrderDetail__r.DeductionPrice__c,StandardTime__c,MinustimeHour__c,OvertimeHour__c from WorkTime__r where CreatedDate = LAST_MONTH) from Account where id in (SELECT Account__c FROM WorkTime__c WHERE CreatedDate = LAST_MONTH)'
         );
     }
 
@@ -34,6 +34,8 @@ public with sharing class InvoiceBatchHandle2 implements Database.Batchable<sObj
 
                 //請求を作成する
                 Invoice__c lastMonthInvoice = new Invoice__c(
+                    //請求書
+                    Name = '請求書タイトル',
                     //計上年月　先月の年ナンバーと月ナンバー
                     InvoiceYM__c = String.valueOf(
                             System.today().toStartOfMonth().addDays(-1).year()
