@@ -71,3 +71,14 @@ for (account aa : a) {
     List<WorkTime__c> wts = aa.WorkTime__r;
     System.debug(wts);
 }
+
+List<AggregateResult> pjQuotes = [
+    SELECT ProjectNo__c, count(ProjectNo__c)
+    FROM PjQuote__c
+    WHERE QuoteStatus__c = '受注承認済' AND CreateDate__c = LAST_MONTH
+    GROUP BY ProjectNo__c
+];
+System.debug(pjQuotes.size());
+for (AggregateResult pjQuote : pjQuotes) {
+    system.debug(pjQuote.get('ProjectNo__c'));
+}

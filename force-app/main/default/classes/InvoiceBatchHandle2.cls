@@ -11,7 +11,7 @@ public with sharing class InvoiceBatchHandle2 implements Database.Batchable<sObj
     public Database.QueryLocator start(Database.BatchableContext bc) {
         //先月作業実績を作成した取引先とその取引先関連の先月作業実績を出す
         return Database.getQueryLocator(
-            'select id,name,(select id,Account__c,PersonalID__r.Account__c,PersonalID__r.id,PersonalID__r.name,PurchaseOrderDetail__c,PurchaseOrderDetail__r.StandardPrice__c,PurchaseOrderDetail__r.OverTimePrice__c,PurchaseOrderDetail__r.DeductionPrice__c,StandardTime__c,MinustimeHour__c,OvertimeHour__c from WorkTime__r where CreatedDate = LAST_MONTH) from Account where id in (SELECT Account__c FROM WorkTime__c WHERE CreatedDate = LAST_MONTH)'
+            'select id,name,(select id,Account__c,PersonalID__r.Account__c,PersonalID__r.id,PersonalID__r.name,PurchaseOrderDetail__c,PurchaseOrderDetail__r.StandardPrice__c,PurchaseOrderDetail__r.OverTimePrice__c,PurchaseOrderDetail__r.DeductionPrice__c,StandardTime__c,MinustimeHour__c,OvertimeHour__c from WorkTime__r where WorkBeginDay__c = LAST_MONTH) from Account where id in (SELECT Account__c FROM WorkTime__c WHERE WorkBeginDay__c = LAST_MONTH)'
         );
     }
 
@@ -119,13 +119,15 @@ public with sharing class InvoiceBatchHandle2 implements Database.Batchable<sObj
                 false
             );
 
-            recordsProcessed2 = saveResult2.size();
             //請求登録の戻り値をループする
             for (Database.SaveResult sr : saveResult2) {
                 //登録失敗した場合はエラーを記録して、logに出力する
                 if (!sr.isSuccess()) {
                     List<Database.Error> errors = sr.getErrors();
                     recordsProcessederr2 = String.join(errors, ',');
+                } else {
+                    //請求登録成功の数を記録する
+                    recordsProcessed1++;
                 }
             }
         }
