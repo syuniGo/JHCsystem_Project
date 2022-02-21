@@ -37,14 +37,14 @@ public with sharing class PurchaseOrderBatch {
         ];
         // 再soql 一次見積明细 見積id in 上面那个見積list  根据見積构建map
         List<PjQuoteDtil__c> pjQuoteDtilInfos = [
-            SELECT id, QuoteName__c
+            SELECT id, ProjectNo__c //QuoteName__c
             FROM PjQuoteDtil__c
             WHERE id IN :pjQuoteInfos
         ];
 
         for (PjQuoteDtil__c pjQuoteDtilInfo : pjQuoteDtilInfos) {
             pjQuoteIdToPjQuoteDtilInfos.put(
-                pjQuoteDtilInfo.QuoteName__c,
+                pjQuoteDtilInfo.ProjectNo__c, //QuoteName__c
                 pjQuoteDtilInfo
             );
         }
@@ -79,7 +79,26 @@ public with sharing class PurchaseOrderBatch {
         }
 
         List<PurchaseOrderDetail__c> purchaseOrderDetailList = new List<PurchaseOrder__c>();
-        for (PjQuoteDtil__c pjQuoteDtilInfo : pjQuoteDtilInfos) {
+
+        for (String pjQuoteId : pjQuoteIdToPjQuoteDtilInfos.keySet()) {
+            List<PjQuoteDtil__c> pjQuoteDtilInfos = pjQuoteIdToPjQuoteDtilInfos.get(
+                pjQuoteId
+            );
+            for (PjQuoteDtil__c pjQuoteDtilInfo : pjQuoteDtilInfos) {
+                PurchaseOrderDetail__c pod = new PurchaseOrderDetail__c(
+                    PurchaseOrderId__c = pjQuoteDtilInfo.QuoteName__c,
+                    //受发注id = pjQuoteId
+                    PartnerMember__c = pjqd.MemberName__c,
+                    WorkQt__c = 1,
+                    StandardPrice__c = 100,
+                    OverTimePrice__c = 200,
+                    DeductionPrice__c = 100
+                );
+                purchaseOrderDetailList.add(pod);
+            }
+        }
+
+        /*       for (PjQuoteDtil__c pjQuoteDtilInfo : pjQuoteDtilInfos) {
             PurchaseOrderDetail__c pod = new PurchaseOrderDetail__c(
                 PurchaseOrderId__c = pjQuoteDtilInfo.QuoteName__c,
                 PartnerMember__c = pjqd.MemberName__c,
@@ -89,7 +108,8 @@ public with sharing class PurchaseOrderBatch {
                 DeductionPrice__c = 100
             );
             purchaseOrderDetailList.add(pod);
-        }
+        } */
+
         List<Database.SaveResult> saveResult2 = Database.insert(
             purchaseOrderDetailList,
             false

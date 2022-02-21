@@ -82,3 +82,21 @@ System.debug(pjQuotes.size());
 for (AggregateResult pjQuote : pjQuotes) {
     system.debug(pjQuote.get('ProjectNo__c'));
 }
+
+/* 
+select OrderCompany__c,Name,AnkenName__c(select id,Name from OperatorInformation__r) from Anken__c
+select OrderCompany__c,Name,AnkenName__c,(select id,Name from OperatorInformation1__r) ,(select id,Name from OperatorInformation2__r) from Anken__c      
+
+ */
+
+/* select id,name from PjQuoteDtil__c where QuoteName__r.Name='An-202202-00000018202203'
+ select id,name from PjQuote__c where Name='An-202202-00000017202203' */
+
+PjQuoteBatch2 ibh = new PjQuoteBatch2();
+Database.executeBatch(ibh, 200);
+
+PurchaseOrderBatchHaCyu ibh = new PurchaseOrderBatchHaCyu();
+Database.executeBatch(ibh, 200);
+
+InvoiceBatchHandle ibh = new InvoiceBatchHandle();
+Database.executeBatch(ibh, 200);

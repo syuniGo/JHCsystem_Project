@@ -1,5 +1,5 @@
 @isTest
-public with sharing class InvoiceBatchTest {
+public with sharing class test3 {
     @testSetup
     static void makeData() {
         //取引先30個登録する
@@ -37,9 +37,6 @@ public with sharing class InvoiceBatchTest {
 
         //取引先listをループして、ひとつごと作業員3人を登録する　総計30*3＝90人
         List<OperatorInformation__c> opList = new List<OperatorInformation__c>();
-
-        //マッピング用MAPを作成する
-        Map<ID, List<OperatorInformation__c>> OPMap = new Map<ID, List<OperatorInformation__c>>();
         for (Account acc : accList) {
             for (Integer i = 0; i < 3; i++) {
                 OperatorInformation__c op = new OperatorInformation__c(
@@ -58,17 +55,6 @@ public with sharing class InvoiceBatchTest {
             }
         }
         insert opList;
-
-        for (OperatorInformation__c op : opList) {
-            if (OPMap.containsKey(op.Account__c)) {
-                OpMap.get(op.Account__c).add(op);
-            } else {
-                List<OperatorInformation__c> listO = new List<OperatorInformation__c>();
-                listO.add(op);
-                OpMap.put(op.Account__c, listO);
-            }
-        }
-
         System.debug('作业员情报' + opList.size());
 
         //案件listと取引先責任者listをループして、一つの案件と一つの取引先責任者の形で見積を登録する　総計3*30＝90
@@ -92,24 +78,20 @@ public with sharing class InvoiceBatchTest {
         //見積listをループと作業員をループして、一つの案件と一つの作業員の形で見積明細を登録する　総計3*30*3＝270
         List<PjQuoteDtil__c> pjqdList = new List<PjQuoteDtil__c>();
         for (PjQuote__c pj : pjList) {
-            for (
-                OperatorInformation__c op : OpMap.get(
-                    pj.OrdersReceivedCompany__c
-                )
-            ) {
-                PjQuoteDtil__c pjqd = new PjQuoteDtil__c(
-                    QuoteName__c = pj.id,
-                    MemberName__c = op.id,
-                    WorkQt__c = 1,
-                    Price__c = 100,
-                    OverTimePrice__c = 0,
-                    DeductionPrice__c = 0,
-                    AnkenId__c = pj.ProjectNo__c
-                );
-                pjqdList.add(pjqd);
-            }
+            for (OperatorInformation__c op : opList) {
+                if (pj.OrdersReceivedCompany__c == op.Account__c) {
+                    PjQuoteDtil__c pjqd = new PjQuoteDtil__c(
+                        QuoteName__c = pj.id,
+                        MemberName__c = op.id,
+                        WorkQt__c = 1,
+                        Price__c = 100,
+                        OverTimePrice__c = 0,
+                        DeductionPrice__c = 0
+                    );
+                    pjqdList.add(pjqd);
+                }
 
-            /*   // 先进行公司筛选如果見積公司==作业公司 获取作业员name string的之后一个字节 转换为integer 首先把编号为200之前的都分配案件0 价格为100
+                /*   // 先进行公司筛选如果見積公司==作业公司 获取作业员name string的之后一个字节 转换为integer 首先把编号为200之前的都分配案件0 价格为100
                 if (
                     pj.OrdersReceivedCompany__c == op.Account__c &&
                     pj.ProjectNo__r.AnkenName__c == 'anken0'
@@ -160,6 +142,7 @@ public with sharing class InvoiceBatchTest {
                         pjqdList.add(pjqd);
                     }
                 } */
+            }
         }
         insert pjqdList;
 
@@ -177,25 +160,23 @@ public with sharing class InvoiceBatchTest {
         }
 
         insert poList;
-        Map<Id, PurchaseOrder__c> POMap = new Map<Id, PurchaseOrder__c>();
-        for (PurchaseOrder__c p : poList) {
-            POMap.put(p.EstimateId__c, p);
-        }
+
         //見積明細listと受発注listをループして、受発注参照の見積id==見積明細参照の見積idの場合　受発注明細を作成して登録する　総計270
         List<PurchaseOrderDetail__c> podList = new List<PurchaseOrderDetail__c>();
         for (PjQuoteDtil__c pjqd : pjqdList) {
-            //キー情報によりデータを取得する
-            PurchaseOrder__c po = POMap.get(pjqd.QuoteName__c);
-            if (po != null) {
-                PurchaseOrderDetail__c pod = new PurchaseOrderDetail__c(
-                    PurchaseOrderId__c = po.id,
-                    PartnerMember__c = pjqd.MemberName__c,
-                    WorkQt__c = 1,
-                    StandardPrice__c = 100,
-                    OverTimePrice__c = 200,
-                    DeductionPrice__c = 100
-                );
-                podList.add(pod);
+            for (PurchaseOrder__c po : poList) {
+                if (pjqd.QuoteName__c == po.EstimateId__c) {
+                    PurchaseOrderDetail__c pod = new PurchaseOrderDetail__c(
+                        PurchaseOrderId__c = po.id,
+                        PartnerMember__c = pjqd.MemberName__c,
+                        WorkQt__c = 1,
+                        StandardPrice__c = 100,
+                        OverTimePrice__c = 200,
+                        DeductionPrice__c = 100
+                    );
+
+                    podList.add(pod);
+                }
             }
         }
 
@@ -214,55 +195,28 @@ public with sharing class InvoiceBatchTest {
         for (PurchaseOrderDetail__c pod : podList2) {
             WorkTime__c wt = new WorkTime__c(
                 TotalUptime__c = 140,
-                ApprovalStatus__c = '承認済',
-                WorkBeginDay__c = Date.newInstance(2022, 1, 11),
+                ApprovalStatus__c = '承認完了',
+                WorkingYearsMonth__c = '202011',
                 PersonalID__c = pod.PartnerMember__c,
                 TypeOfContract__c = '作業請負', //pod.PurchaseOrderId__r.ContractType__c
                 PurchaseOrderDetail__c = pod.id,
                 StandardTime__c = 100,
+                MinustimeHour__c = 0,
+                OvertimeHour__c = 0,
                 Account__c = pod.PartnerMember__r.Account__c
             );
 
             wtList.add(wt);
         }
         insert wtList;
-        
         System.debug('作业实绩个数' + wtList.size());
     }
     //检查最后是否创建了3个 主请求 1800个请求明细  最后主请求的金额是否为100*200+130*100+160*100  * 税收
 
     @isTest
-    static void positiveTest() {
+    static void methodName() {
         Test.startTest();
-        InvoiceBatchHandle ibh = new InvoiceBatchHandle();
-        Database.executeBatch(ibh, 200);
-        Test.stopTest();
-        List<InvoiceDetail__c> results1 = [SELECT id FROM InvoiceDetail__c];
-        System.assertEquals(270, results1.size());
-        List<Invoice__c> results2 = [SELECT id FROM Invoice__c];
-        System.assertEquals(30, results2.size());
-        //??? System.assertEquals(1, Limits.getEmailInvocations());
-    }
-
-    @isTest
-    static void negativeTest1() {
-        List<PurchaseOrder__c> poList = [select from PurchaseOrder__c]
-
-        Test.startTest();
-        InvoiceBatchHandle ibh = new InvoiceBatchHandle();
-        Database.executeBatch(ibh, 200);
-        Test.stopTest();
-        List<InvoiceDetail__c> results1 = [SELECT id FROM InvoiceDetail__c];
-        System.assertEquals(270, results1.size());
-        List<Invoice__c> results2 = [SELECT id FROM Invoice__c];
-        System.assertEquals(30, results2.size());
-        //??? System.assertEquals(1, Limits.getEmailInvocations());
-    }
-
-    @isTest
-    static void negativeTest2() {
-        Test.startTest();
-        InvoiceBatchHandle ibh = new InvoiceBatchHandle();
+        InvoiceBatchHandle2 ibh = new InvoiceBatchHandle2();
         Database.executeBatch(ibh, 200);
         Test.stopTest();
         List<InvoiceDetail__c> results1 = [SELECT id FROM InvoiceDetail__c];
