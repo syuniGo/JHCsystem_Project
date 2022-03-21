@@ -51,7 +51,8 @@ public with sharing class InvoiceBatchTest {
                     Status__c = '継続',
                     MaxTime__c = 180,
                     MinimumTime__c = 140,
-                    Account__c = acc.id
+                    Account__c = acc.id,
+                    StandardTime__c =160
                 );
 
                 opList.add(op);
@@ -219,48 +220,19 @@ public with sharing class InvoiceBatchTest {
                 PersonalID__c = pod.PartnerMember__c,
                 TypeOfContract__c = '作業請負', //pod.PurchaseOrderId__r.ContractType__c
                 PurchaseOrderDetail__c = pod.id,
-                StandardTime__c = 100,
+
                 Account__c = pod.PartnerMember__r.Account__c
             );
 
             wtList.add(wt);
         }
         insert wtList;
-        
         System.debug('作业实绩个数' + wtList.size());
     }
     //检查最后是否创建了3个 主请求 1800个请求明细  最后主请求的金额是否为100*200+130*100+160*100  * 税收
 
     @isTest
-    static void positiveTest() {
-        Test.startTest();
-        InvoiceBatchHandle ibh = new InvoiceBatchHandle();
-        Database.executeBatch(ibh, 200);
-        Test.stopTest();
-        List<InvoiceDetail__c> results1 = [SELECT id FROM InvoiceDetail__c];
-        System.assertEquals(270, results1.size());
-        List<Invoice__c> results2 = [SELECT id FROM Invoice__c];
-        System.assertEquals(30, results2.size());
-        //??? System.assertEquals(1, Limits.getEmailInvocations());
-    }
-
-    @isTest
-    static void negativeTest1() {
-        List<PurchaseOrder__c> poList = [select from PurchaseOrder__c]
-
-        Test.startTest();
-        InvoiceBatchHandle ibh = new InvoiceBatchHandle();
-        Database.executeBatch(ibh, 200);
-        Test.stopTest();
-        List<InvoiceDetail__c> results1 = [SELECT id FROM InvoiceDetail__c];
-        System.assertEquals(270, results1.size());
-        List<Invoice__c> results2 = [SELECT id FROM Invoice__c];
-        System.assertEquals(30, results2.size());
-        //??? System.assertEquals(1, Limits.getEmailInvocations());
-    }
-
-    @isTest
-    static void negativeTest2() {
+    static void methodName() {
         Test.startTest();
         InvoiceBatchHandle ibh = new InvoiceBatchHandle();
         Database.executeBatch(ibh, 200);

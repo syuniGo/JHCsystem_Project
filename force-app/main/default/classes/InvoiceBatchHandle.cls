@@ -110,17 +110,12 @@ public with sharing class InvoiceBatchHandle implements Database.Batchable<sObje
                         //消費税率
                         TaxRate__c = 10
                     );
-                    //工数
                     Decimal wqt = lastMonthWt.PurchaseOrderDetail__r.WorkQt__c;
-                    //残業時間
+                    Decimal standardHour = lastMonthWt.StandardTime__c;
                     Decimal overtimeHour = lastMonthWt.OvertimeHour__c;
-                    //控除時間
                     Decimal minustimeHour = lastMonthWt.MinustimeHour__c;
-                    //標準単価
                     Decimal standPrice = lastMonthWt.PurchaseOrderDetail__r.StandardPrice__c;
-                    //控除単価
                     Decimal deductionPrice = lastMonthWt.PurchaseOrderDetail__r.DeductionPrice__c;
-                    //
                     Decimal overTimePrice = lastMonthWt.PurchaseOrderDetail__r.OverTimePrice__c;
 
                     newInvoiceDetail.InvoiceAmount__c = (minustimeHour == 0) &&
